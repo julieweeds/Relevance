@@ -131,8 +131,9 @@ class VectorSpace():
                                             exit()
                                         avector.weightfeatures(freqfields[1:])
                                     self.featuredict=avector.filterfeatures(self.params.get("n_feat",10),self.featuredict)
-                                    avector.writewidths(outstream1,outstream2,outstream4)
-                                    avector.writevector(outstream3)
+                                    if avector.origwidth > 0:
+                                        avector.writewidths(outstream1,outstream2,outstream4)
+                                        avector.writevector(outstream3)
                                     linesread+=1
                                     if linesread%self.check==0:
                                         print "Processed "+str(linesread)+" lines"
