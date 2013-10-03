@@ -19,7 +19,7 @@ class Vector():
         while(len(featurelist)>0):
             score = float(featurelist.pop())
             feat = featurelist.pop()
-            if score > 0:
+            if score > 0 and feat != "___FILTERED___":
                 self.featurelist.append((score,feat))
         self.origwidth=len(self.featurelist)
         if self.params["testing"]:
