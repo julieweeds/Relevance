@@ -19,10 +19,19 @@ class Vector():
         while(len(featurelist)>0):
             score = float(featurelist.pop())
             feat = featurelist.pop()
-            self.featurelist.append((score,feat))
+            if score > 0:
+                self.featurelist.append((score,feat))
         self.origwidth=len(self.featurelist)
         if self.params["testing"]:
             print self.origwidth, self.featurelist
+
+    def weightfeatures(self,freqlist):
+        mydict={}
+        while(len(freqlist)>0):
+            freq = int(freqlist.pop())
+            mydict[freqlist.pop()]=freq
+
+        self.featurelist=[(score*mydict[feat],feat) for (score,feat) in self.featurelist]
 
     def filterfeatures(self,n_feats,featuredict):
 
@@ -33,10 +42,20 @@ class Vector():
         else:
             self.featurelist.reverse()
 
+
+        if self.params["rank"] or self.params["all_feat"]:
+            n_feats=len(self.featurelist) #just rank features - no cut off
         newlist=[]
         self.filteredtotal=0
+        rank=1
         while len(newlist)<n_feats and len(self.featurelist) > 0:
-            newlist.append(self.featurelist.pop())
+            if self.params["rank"]:
+                rel=1.0-(rank*1.0/(self.origwidth+1))
+            else:
+                rel=1.0
+            (sc,feat)=self.featurelist.pop()
+            newlist.append((sc*rel,feat))
+            rank+=1
         for(sc,feat) in newlist:
             self.filteredtotal+=sc
             featuredict[feat] = featuredict.get(feat,0)+sc
@@ -67,8 +86,17 @@ class VectorSpace():
 
         self.params=params
         self.datapath=os.path.join(params['datadir'],params['datafile'])
+        self.freqpath=os.path.join(params['datadir'],params['freqfile'])
         self.widthfile=os.path.join(params['datadir'],params['datafile']+'.widths')
-        self.relevantvectorsfile=os.path.join(params['datadir'],params['datafile']+"_rel"+str(self.params.get("n_feat",10)))
+        if self.params["rank"]:
+            self.relevantvectorsfile=os.path.join(params['datadir'],params['datafile']+"_relranked")
+
+        elif self.params["weighted-ppmi"]:
+            self.relevantvectorsfile=os.path.join(params['datadir'],params['datafile']+"_weightedppmi")
+            if not self.params["all_feat"]:
+                self.relevantvectorsfile+=str(self.params.get("n_feat",10))
+        else:
+            self.relevantvectorsfile=os.path.join(params['datadir'],params['datafile']+"_rel"+str(self.params.get("n_feat",10)))
         self.relevantwidthfile=self.relevantvectorsfile+'.widths'
         self.relevantentries=self.relevantvectorsfile+"_entries.strings"
         self.relevantfeatures=self.relevantvectorsfile+"_features.strings"
@@ -85,20 +113,30 @@ class VectorSpace():
                 with open(self.relevantwidthfile,'w') as outstream2:
                     with open(self.relevantvectorsfile,'w') as outstream3:
                         with open(self.relevantentries,'w') as outstream4:
-                            print "Reading "+self.datapath
-                            linesread=0
-                            for line in instream:
-                                line=line.rstrip()
-                                fields=line.split('\t')
-                                vectorname=fields[0]
-                                avector=Vector(vectorname,fields[1:],self.params)
-                                self.featuredict=avector.filterfeatures(self.params.get("n_feat",10),self.featuredict)
-                                avector.writewidths(outstream1,outstream2,outstream4)
-                                avector.writevector(outstream3)
-                                linesread+=1
-                                if linesread%self.check==0:
-                                    print "Processed "+str(linesread)+" lines"
-                                    if self.params["testing"]: break
+                            with open(self.freqpath,'r') as freqstream:
+                                print "Reading "+self.datapath
+                                linesread=0
+                                for line in instream:
+                                    line=line.rstrip()
+                                    fields=line.split('\t')
+                                    vectorname=fields[0]
+                                    avector=Vector(vectorname,fields[1:],self.params)
+                                    if self.params["weighted-ppmi"]:
+                                        freqline=freqstream.readline()
+                                        #print freqline
+                                        freqfields=freqline.rstrip().split('\t')
+                                        freqname=fields[0]
+                                        if freqname != vectorname:
+                                            print "Freqfile and datafile not aligned"
+                                            exit()
+                                        avector.weightfeatures(freqfields[1:])
+                                    self.featuredict=avector.filterfeatures(self.params.get("n_feat",10),self.featuredict)
+                                    avector.writewidths(outstream1,outstream2,outstream4)
+                                    avector.writevector(outstream3)
+                                    linesread+=1
+                                    if linesread%self.check==0:
+                                        print "Processed "+str(linesread)+" lines"
+                                        if self.params["testing"]: break
 
                 print "Finished processing file: "+str(linesread)+" lines"
 
