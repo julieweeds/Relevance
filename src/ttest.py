@@ -40,8 +40,9 @@ def processfile(filename,entdict,featdict):
     with open(filename,'r') as instream:
         with open(filename+'_tt','w') as outstream:
 
-            outputlist=[]
+
             for line in instream:
+                outputlist=[]
                 linesread+=1
                 if linesread%1000==0: print "Processed "+str(linesread)+" lines"
                 fields=line.rstrip().split('\t')
