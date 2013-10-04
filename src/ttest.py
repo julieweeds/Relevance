@@ -46,12 +46,11 @@ def processfile(filename,entdict,featdict):
                 if linesread%1000==0: print "Processed "+str(linesread)+" lines"
                 fields=line.rstrip().split('\t')
                 entry=fields[0]
+                entryfreq=entdict.get(entry,0)
                 while(len(fields[1:])>0):
                     joint = float(fields.pop())
                     feat = fields.pop()
                     featfreq=featdict.get(feat,0)
-                    entryfreq=entdict.get(entry,0)
-
                     score = compute_score(joint,entryfreq,featfreq,gt1,'ts')
                     if score>0:
                         outputlist.append((score,feat))
