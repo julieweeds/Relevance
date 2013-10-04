@@ -43,7 +43,7 @@ def processfile(filename,entdict,featdict):
             outputlist=[]
             for line in instream:
                 linesread+=1
-                if linesread%1000: print "Processed "+str(linesread)+" lines"
+                if linesread%1000==0: print "Processed "+str(linesread)+" lines"
                 fields=line.rstrip().split('\t')
                 entry=fields[0]
                 while(len(fields[1:])>0):
