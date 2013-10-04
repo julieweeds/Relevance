@@ -56,7 +56,7 @@ def processfile(filename,entdict,featdict):
                     if score>0:
                         outputlist.append((score,feat))
                 if len(outputlist)>0:
-                    outputlist.sort(reverse=True)
+                    #outputlist.sort(reverse=True)
                     outstream.write(entry)
                     for(sc,f) in outputlist:
                         outstream.write('\t'+f+'\t'+str(sc))
