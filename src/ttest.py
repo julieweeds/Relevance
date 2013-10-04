@@ -55,7 +55,7 @@ def processfile(filename,entdict,featdict):
                     score = compute_score(joint,entryfreq,featfreq,gt1,'ts')
                     if score>0:
                         outputlist.append((score,feat))
-                if len(outputlist>0):
+                if len(outputlist)>0:
                     outputlist.sort(reverse=True)
                     outstream.write(entry)
                     for(sc,f) in outputlist:
